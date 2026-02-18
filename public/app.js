@@ -431,9 +431,13 @@ function renderMap() {
   const metric = document.getElementById('map-metric').value;
   const metricLabels = { total: 'Total medals', gold: 'Gold medals', medalsPerMillionPop: 'Medals per million population' };
   const byIso = {};
-  combinedData.forEach((r) => { byIso[r.iso || r.code] = r; });
+  combinedData.forEach((r) => {
+    const key = (r.iso || r.code || '').toString().toUpperCase();
+    if (key) byIso[key] = r;
+  });
   const getVal = (iso) => {
-    const r = byIso[iso];
+    const key = iso != null ? String(iso).toUpperCase() : '';
+    const r = byIso[key];
     if (!r) return null;
     const v = r[metric];
     return v != null && Number(v) >= 0 ? Number(v) : null;
@@ -483,8 +487,8 @@ function renderMap() {
   }
   if (mapGeoJsonLayer) { mapInstance.removeLayer(mapGeoJsonLayer); mapGeoJsonLayer = null; }
 
-  fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
-    .then((res) => res.json())
+  fetch(api('/api/geojson/countries'))
+    .then((res) => { if (!res.ok) throw new Error(res.statusText); return res.json(); })
     .then((geojson) => {
       mapGeoJsonLayer = L.geoJSON(geojson, {
         style: (feature) => {
@@ -495,7 +499,8 @@ function renderMap() {
         },
         onEachFeature: (feature, layer) => {
           const iso = feature.id || feature.properties?.ISO_A3 || feature.properties?.ADM0_A3 || feature.properties?.iso_a3 || feature.properties?.id;
-          const r = byIso[iso];
+          const key = iso != null ? String(iso).toUpperCase() : '';
+          const r = byIso[key];
           const name = feature.properties?.name || feature.properties?.ADMIN || iso;
           layer.bindTooltip(r ? `${r.country}: ${r.gold}G ${r.silver}S ${r.bronze}B (${r.total} total)` : name, { permanent: false });
         }

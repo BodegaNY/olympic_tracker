@@ -185,6 +185,18 @@ router.get('/api/countries', async (req, res) => {
   }
 });
 
+// GeoJSON for map: proxy so the client always gets it same-origin (avoids CORS/blocking on production).
+const GEOJSON_COUNTRIES_URL = 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json';
+router.get('/api/geojson/countries', async (req, res) => {
+  try {
+    const geojson = await fetchJson(GEOJSON_COUNTRIES_URL);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.json(geojson);
+  } catch (e) {
+    res.status(502).json({ error: 'Could not load map data' });
+  }
+});
+
 router.get('/api/gdp', async (req, res) => {
   const codes = (req.query.codes || '').split(',').filter(Boolean).map(c => c.trim().toUpperCase());
   if (!codes.length) {
