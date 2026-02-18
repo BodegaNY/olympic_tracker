@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Olympics Medal Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+</head>
+<body>
+  <script>window.OLYMPICS_BASE = '__BASE_PATH__';</script>
+  <header>
+    <h1>Olympics Medal Tracker</h1>
+    <div class="controls">
+      <label for="olympics">Olympics</label>
+      <select id="olympics">
+        <option value="OW2026">2026 Winter (Milan-Cortina)</option>
+        <option value="OG2024">2024 Summer (Paris)</option>
+        <option value="OW2022">2022 Winter (Beijing)</option>
+        <option value="OG2020">2020 Summer (Tokyo)</option>
+        <option value="OW2018">2018 Winter (PyeongChang)</option>
+      </select>
+      <button type="button" id="refresh">Refresh data</button>
+      <button type="button" id="export-csv">Download CSV</button>
+      <div class="columns-toggle-wrap">
+        <button type="button" id="columns-btn" aria-haspopup="true" aria-expanded="false">Columns</button>
+        <div id="columns-menu" class="columns-menu hidden" role="menu">
+          <label><input type="checkbox" data-col="rank" checked> Rank</label>
+          <label><input type="checkbox" data-col="country" checked> Country</label>
+          <label><input type="checkbox" data-col="gold" checked> Gold</label>
+          <label><input type="checkbox" data-col="silver" checked> Silver</label>
+          <label><input type="checkbox" data-col="bronze" checked> Bronze</label>
+          <label><input type="checkbox" data-col="total" checked> Total</label>
+          <label><input type="checkbox" data-col="athletes" checked> Athletes</label>
+          <label><input type="checkbox" data-col="medalsPerAthlete" checked> Medals/athlete</label>
+          <label><input type="checkbox" data-col="population" checked> Population</label>
+          <label><input type="checkbox" data-col="gdp" checked> GDP</label>
+          <label><input type="checkbox" data-col="area" checked> Area</label>
+          <label><input type="checkbox" data-col="medalsPerMillionPop" checked> Medals/M pop</label>
+          <label><input type="checkbox" data-col="medalsPerTrillionGDP" checked> Medals/trillion GDP</label>
+          <label><input type="checkbox" data-col="trend" checked> Trend</label>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main>
+    <nav class="view-tabs" role="tablist">
+      <button type="button" class="view-tab active" data-view="table" role="tab">Table</button>
+      <button type="button" class="view-tab" data-view="charts" role="tab">Charts</button>
+      <button type="button" class="view-tab" data-view="map" role="tab">Map</button>
+      <button type="button" class="view-tab" data-view="compare" role="tab">Compare</button>
+    </nav>
+    <p id="data-warning" class="data-warning hidden"></p>
+    <p id="status" class="status">Loading…</p>
+    <p id="timer" class="timer hidden"></p>
+    <div id="table-wrap" class="table-wrap">
+      <div class="table-legend-wrap">
+        <label class="table-legend-label"><input type="checkbox" id="highlight-by-rank" checked> Highlight by rank</label>
+        <label class="table-legend-label"><input type="checkbox" id="shade-all-columns"> Rank shading for all columns</label>
+        <span class="table-legend" id="table-legend" aria-hidden="true">Cell shading: rank in sort column only (darker = better rank).</span>
+      </div>
+      <table id="medal-table">
+        <thead>
+          <tr>
+            <th class="th-sort" data-sort="rank" data-column="rank" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6h12v5c0 3-2 5-6 5s-6-2-6-5V6z"/><path d="M8 16h8v4H8zM12 16V6"/></svg></span>Rank <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="country" data-column="country" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/></svg></span>Country <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="gold" data-column="gold" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#D4AF37" stroke="#B8962E" stroke-width="1"/><circle cx="12" cy="10" r="4" fill="none" stroke="#B8962E" stroke-width="0.8" opacity="0.6"/></svg></span>Gold <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="silver" data-column="silver" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#C0C0C0" stroke="#A0A0A0" stroke-width="1"/><circle cx="12" cy="10" r="4" fill="none" stroke="#A0A0A0" stroke-width="0.8" opacity="0.6"/></svg></span>Silver <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="bronze" data-column="bronze" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#CD7F32" stroke="#A0522D" stroke-width="1"/><circle cx="12" cy="10" r="4" fill="none" stroke="#A0522D" stroke-width="0.8" opacity="0.6"/></svg></span>Bronze <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="total" data-column="total" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="6" cy="8" r="2.5" fill="none" stroke="#0081C8" stroke-width="1.2"/><circle cx="12" cy="8" r="2.5" fill="none" stroke="#000" stroke-width="1.2"/><circle cx="18" cy="8" r="2.5" fill="none" stroke="#EE3340" stroke-width="1.2"/><circle cx="9" cy="13" r="2.5" fill="none" stroke="#FCB131" stroke-width="1.2"/><circle cx="15" cy="13" r="2.5" fill="none" stroke="#00A651" stroke-width="1.2"/></svg></span>Total <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="athletes" data-column="athletes" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="6" r="3"/><path d="M6 22c0-3.3 2.7-6 6-6s6 2.7 6 6M12 9v2"/></svg></span>Athletes <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="medalsPerAthlete" data-column="medalsPerAthlete" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="7" r="3" fill="#C0C0C0" stroke="#888" stroke-width="0.8"/><circle cx="8" cy="5" r="0.8" fill="none" stroke="#666" stroke-width="0.6"/><path d="M8 18v2" stroke="#555" stroke-width="1" stroke-linecap="round"/><path d="M4 14h2M14 14h2" stroke="#1a5fb4" stroke-width="1.2"/><rect x="6" y="2" width="4" height="3" rx="0.5" fill="#D4AF37" stroke="#B8962E" stroke-width="0.5"/></svg></span>Medals / athlete <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="population" data-column="population" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="7" r="2.5"/><circle cx="16" cy="7" r="2.5"/><circle cx="12" cy="14" r="2.5"/><path d="M8 10v3c0 2 1.5 3 4 3s4-1 4-3v-3M5 20v-2c0-2 2-3 7-3s7 1 7 3v2"/></svg></span>Population <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="gdp" data-column="gdp" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v16M9 8h6a2 2 0 1 1 0 4H9m6 4H9a2 2 0 1 1 0 4h6"/></svg></span>GDP <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="area" data-column="area" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l4-8 4 4 6-12 2 8"/></svg></span>Area (km²) <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="medalsPerMillionPop" data-column="medalsPerMillionPop" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="14" width="4" height="6" rx="1" fill="#1a5fb4" opacity="0.8"/><rect x="10" y="10" width="4" height="10" rx="1" fill="#1a5fb4" opacity="0.9"/><rect x="16" y="6" width="4" height="14" rx="1" fill="#1a5fb4"/></svg></span>Medals / M pop <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th class="th-sort" data-sort="medalsPerTrillionGDP" data-column="medalsPerTrillionGDP" tabindex="0"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v16M9 8h6a2 2 0 1 1 0 4H9m6 4H9a2 2 0 1 1 0 4h6" stroke="#555" stroke-width="1.2" fill="none"/><rect x="6" y="14" width="3" height="6" rx="0.5" fill="#1a5fb4" opacity="0.7"/><rect x="11" y="10" width="3" height="10" rx="0.5" fill="#1a5fb4"/><rect x="16" y="6" width="3" height="14" rx="0.5" fill="#1a5fb4"/></svg></span>Medals / trillion GDP <span class="sort-arrow" aria-hidden="true"></span></th>
+            <th data-column="trend"><span class="th-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l4-4 4 2 6-8 6 4"/></svg></span>Trend</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="charts-wrap" class="charts-wrap hidden">
+      <div class="chart-controls">
+        <label for="chart-type">Chart</label>
+        <select id="chart-type">
+          <option value="bar">Top countries (bar)</option>
+          <option value="composition">Medal composition (stacked)</option>
+          <option value="scatter">Demographics vs medals (scatter)</option>
+        </select>
+        <label for="bar-metric" id="bar-metric-label">Metric</label>
+        <select id="bar-metric">
+          <option value="total">Total medals</option>
+          <option value="gold">Gold only</option>
+          <option value="medalsPerAthlete">Medals per athlete</option>
+          <option value="medalsPerMillionPop">Medals per M pop</option>
+        </select>
+        <label for="scatter-x" id="scatter-x-label" class="hidden">X axis</label>
+        <select id="scatter-x" class="hidden">
+          <option value="population">Population</option>
+          <option value="gdp">GDP</option>
+        </select>
+        <label for="scatter-y" id="scatter-y-label" class="hidden">Y axis</label>
+        <select id="scatter-y" class="hidden">
+          <option value="total">Total medals</option>
+          <option value="medalsPerMillionPop">Medals per M pop</option>
+        </select>
+      </div>
+      <div class="chart-container"><canvas id="chart-canvas"></canvas></div>
+    </div>
+    <div id="map-wrap" class="map-wrap hidden">
+      <div class="map-controls">
+        <label for="map-metric">Color by</label>
+        <select id="map-metric">
+          <option value="total">Total medals</option>
+          <option value="gold">Gold medals</option>
+          <option value="medalsPerMillionPop">Medals per M pop</option>
+        </select>
+      </div>
+      <div id="map-container"></div>
+      <div id="map-legend" class="map-legend" aria-label="Map legend"></div>
+      <p class="map-tip">Hover a country for details.</p>
+    </div>
+    <div id="compare-wrap" class="compare-wrap hidden">
+      <div class="compare-controls">
+        <label>Editions to compare</label>
+        <div id="compare-editions-checkboxes"></div>
+        <label for="compare-country">Single country over time</label>
+        <select id="compare-country"><option value="">-- Select country --</option></select>
+      </div>
+      <div id="compare-table-wrap" class="table-wrap">
+        <p id="compare-placeholder" class="status">Select 2+ editions above; data will load.</p>
+        <table id="compare-table" class="hidden"><thead id="compare-thead"></thead><tbody id="compare-tbody"></tbody></table>
+      </div>
+      <div id="trends-chart-wrap" class="hidden"><canvas id="trends-canvas"></canvas></div>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

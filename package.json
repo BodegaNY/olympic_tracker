@@ -1,0 +1,15 @@
+{
+  "name": "olympics-tracker",
+  "version": "1.0.0",
+  "description": "Olympics medal tracker with country stats, sortable table, charts, and map",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
