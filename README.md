@@ -27,6 +27,20 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Updating the live site (Render)
+
+The app is deployed at **https://olympic-tracker-ss4b.onrender.com/** from the repo **BodegaNY/olympic_tracker**. To update the live site:
+
+1. **Commit and push** to `main`:
+   ```bash
+   git add .
+   git commit -m "Your change description"
+   git push origin main
+   ```
+2. **Render auto-deploys** on every push to `main`. Check [dashboard.render.com](https://dashboard.render.com) → your **olympic_tracker** service → **Logs** to confirm the build and deploy. The live URL stays the same unless you change the service name.
+
+If the Render URL ever changes, update it in **DEPLOY.md** and **docs/RENDER-SETUP.md** (and in the poker site’s `/olmpc` `index.html` if that frontend points at this API).
+
 ## Running on a remote server
 
 The app is set up to run on a remote host: it listens on all interfaces (`0.0.0.0`) and uses `PORT` from the environment when set (e.g. cloud platforms).

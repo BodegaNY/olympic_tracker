@@ -7,6 +7,13 @@ description: Project-specific guidance for the Olympics Medal Tracker codebase. 
 
 Apply this skill when working on the Olympics Medal Tracker: adding features, fixing bugs, or preparing for the next Olympics.
 
+## Live site and updates
+
+- **Live site:** https://olympic-tracker-ss4b.onrender.com/
+- **Repo:** https://github.com/BodegaNY/olympic_tracker (branch `main`)
+
+**To update the online site:** commit and push to `main`. Render auto-deploys on every push; no manual deploy. See **DEPLOY.md** and **docs/RENDER-SETUP.md** for full setup; use **README.md → Updating the live site** for the short version.
+
 ## Project layout
 
 - **server.js**: Express app. Defines `OLYMPICS_EVENTS`, medal fetch (Olympics.com → Wikipedia → fallback), REST Countries, World Bank GDP, whereig athlete scrape, `runCombinedLogic`, `/api/events`, `/api/medals`, `/api/combined`, `/api/combined-multi`, `/api/combined-stream`.
