@@ -1,9 +1,10 @@
 # Create GitHub repo "olympic_tracker" and push this project.
-# Uses the same token as your poker repo: set GITHUB_TOKEN before running, or
-# add GITHUB_TOKEN to Cursor Environment/Secrets so it's available in the shell.
+# Uses the same access as the poker project (BodegaNY/phgpoker):
+#   1. GITHUB_TOKEN (or GH_TOKEN) env if set
+#   2. Else: git credential for github.com (Windows Credential Manager)
+# So no manual token needed if you've already pushed to GitHub from this machine.
 #
 # Run from repo root:  .\scripts\create-github-repo.ps1
-# Or with token inline:  $env:GITHUB_TOKEN = "ghp_xxxx"; .\scripts\create-github-repo.ps1
 
 $ErrorActionPreference = "Stop"
 $repoName = "olympic_tracker"
@@ -11,8 +12,11 @@ $repoName = "olympic_tracker"
 $token = $env:GITHUB_TOKEN
 if (-not $token) { $token = $env:GH_TOKEN }
 if (-not $token) {
-    Write-Host "Set GITHUB_TOKEN (or GH_TOKEN) to your GitHub token, then run this script again."
-    Write-Host "Example: `$env:GITHUB_TOKEN = 'ghp_xxxx'; .\scripts\create-github-repo.ps1"
+    $cred = "protocol=https`nhost=github.com" | git credential fill 2>$null
+    $token = ($cred | Where-Object { $_ -match '^password=' }) -replace '^password=',''
+}
+if (-not $token) {
+    Write-Error "No GitHub token. Set GITHUB_TOKEN or ensure git credential for github.com is configured (same as for BodegaNY/phgpoker)."
     exit 1
 }
 
@@ -20,19 +24,7 @@ $root = (Resolve-Path (Join-Path (Split-Path -Parent $PSScriptRoot) ".")).Path
 Push-Location $root
 
 try {
-    # Prefer GitHub CLI if available
-    $gh = Get-Command gh -ErrorAction SilentlyContinue
-    if ($gh) {
-        $token | gh auth login --with-token 2>$null
-        gh repo create $repoName --public --source=. --remote=origin --push 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            $login = gh api user -q .login 2>$null
-            if ($login) { Write-Host "Done. Repo: https://github.com/$login/$repoName" }
-            exit 0
-        }
-    }
-
-    # Fallback: GitHub API + git (no gh required)
+    # GitHub API + git (works with token from env or git credential; avoids gh scope requirements)
     $headers = @{
         "Authorization" = "Bearer $token"
         "Accept"        = "application/vnd.github+json"

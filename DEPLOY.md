@@ -1,35 +1,20 @@
 # Deploy Olympics Tracker to GitHub + Render
 
-## 1. Create the GitHub repo and push (using your poker token)
+## 1. Create the GitHub repo and push (same access as poker)
 
-The repo is already initialized with an initial commit. Create the GitHub repo and push in one step using the **same token** you use for the poker site.
+The script `scripts\create-github-repo.ps1` uses the **same GitHub access** as the poker project (BodegaNY/phgpoker):
 
-**Option A – Token in environment (recommended)**  
-Add `GITHUB_TOKEN` to Cursor so it’s available in the terminal (e.g. **Cursor Settings → Environment → Environment variables** or **Secrets**). Then run:
+1. **GITHUB_TOKEN** (or GH_TOKEN) env if set  
+2. Else **git credential for github.com** (Windows Credential Manager — same credential used when you push to phgpoker)
+
+So from this machine you can run (no manual token needed if you’ve already pushed to GitHub):
 
 ```powershell
 cd "d:\Projects\Olympics Tracker\Olympics"
 .\scripts\create-github-repo.ps1
 ```
 
-**Option B – Token for this run only**
-
-```powershell
-cd "d:\Projects\Olympics Tracker\Olympics"
-$env:GITHUB_TOKEN = "ghp_YourTokenHere"
-.\scripts\create-github-repo.ps1
-```
-
-The script creates the `olympic_tracker` repo on your GitHub account and pushes the current branch. It uses the GitHub API (and `gh` if installed), so no manual repo creation is needed.
-
-**Option C – Manual**  
-Create an empty repo named `olympic_tracker` on GitHub, then:
-
-```powershell
-cd "d:\Projects\Olympics Tracker\Olympics"
-git remote add origin https://github.com/YOUR_USERNAME/olympic_tracker.git
-git push -u origin main
-```
+The script creates the repo (under the same org/user as your credential) and pushes. **Repo (already created):** **https://github.com/BodegaNY/olympic_tracker**
 
 ## 3. Set up on Render
 
