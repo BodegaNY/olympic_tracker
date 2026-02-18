@@ -1,31 +1,35 @@
 # Deploy Olympics Tracker to GitHub + Render
 
-## 1. Create the GitHub repo
+## 1. Create the GitHub repo and push (using your poker token)
 
-1. Log in to **GitHub** with the same account you use for the poker site.
-2. Click **+** → **New repository**.
-3. Set:
-   - **Repository name:** `olympic_tracker`
-   - **Visibility:** Public (or Private if you prefer).
-   - Leave "Add a README" **unchecked** (this folder already has one).
-4. Click **Create repository**.
+The repo is already initialized with an initial commit. Create the GitHub repo and push in one step using the **same token** you use for the poker site.
 
-## 2. Push this project to the repo
+**Option A – Token in environment (recommended)**  
+Add `GITHUB_TOKEN` to Cursor so it’s available in the terminal (e.g. **Cursor Settings → Environment → Environment variables** or **Secrets**). Then run:
 
-In a terminal, from **this project folder** (the one that contains `server.js`, `public/`, `package.json`):
-
-```bash
+```powershell
 cd "d:\Projects\Olympics Tracker\Olympics"
+.\scripts\create-github-repo.ps1
+```
 
-git init
-git add .
-git commit -m "Initial commit: Olympics medal tracker"
-git branch -M main
+**Option B – Token for this run only**
+
+```powershell
+cd "d:\Projects\Olympics Tracker\Olympics"
+$env:GITHUB_TOKEN = "ghp_YourTokenHere"
+.\scripts\create-github-repo.ps1
+```
+
+The script creates the `olympic_tracker` repo on your GitHub account and pushes the current branch. It uses the GitHub API (and `gh` if installed), so no manual repo creation is needed.
+
+**Option C – Manual**  
+Create an empty repo named `olympic_tracker` on GitHub, then:
+
+```powershell
+cd "d:\Projects\Olympics Tracker\Olympics"
 git remote add origin https://github.com/YOUR_USERNAME/olympic_tracker.git
 git push -u origin main
 ```
-
-Replace `YOUR_USERNAME` with your GitHub username. If GitHub asks for credentials, use your normal login (or a Personal Access Token if you use 2FA).
 
 ## 3. Set up on Render
 
